@@ -109,14 +109,22 @@ results_df = pd.DataFrame({
     "Battery_SoC": [model.E[t].value if model.E[t].value is not None else 0 for t in T]
 })
 
-# Add the missing "Cost" column (assuming cost per unit is 0.1)
-results_df["Cost"] = results_df["P_grid"] * 0.1  # Grid import cost calculation
+
+results_df["Cost"] = results_df["P_grid"] * 0.1  
 
 # Save results to CSV
 results_df.to_csv("optimization_results.csv", index=False)
 
+plt.figure(figsize=(14, 6))
+plt.plot(results_df["Time"], results_df["Cost"], label="Cost Over Time ($)", linewidth=2, color='r')
+plt.xlabel("Time Step (15 min intervals)")
+plt.ylabel("Cost ($)")
+plt.title("Cost Over Time")
+plt.legend()
+plt.grid()
+plt.savefig(os.path.join(output_folder, "Cost_Over_Time.png"))
+plt.show()
 
-# Save and display plots
 plt.figure(figsize=(14, 6))
 plt.plot(results_df["Time"], results_df["Battery_SoC"], label="Battery State of Charge (SoC) (kWh)", linestyle='dashed', linewidth=2)
 plt.xlabel("Time Step (15 min intervals)")
@@ -150,7 +158,5 @@ plt.grid()
 plt.savefig(os.path.join(output_folder, "Charging_Discharging_Patterns.png"))
 plt.show()
 plt.close()
-
-print("Total Cost: $", sum(results_df["Cost"]))
 
 print("Optimization complete.")
