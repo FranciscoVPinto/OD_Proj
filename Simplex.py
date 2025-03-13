@@ -31,60 +31,58 @@ P_production = {t: producers_data.iloc[t, :15].sum() for t in T}
 
 #%%
 
-# Define decision variables
 model.P_c = Var(T, within=NonNegativeReals)  # Battery charging power
 model.P_d = Var(T, within=NonNegativeReals)  # Battery discharging power
-model.E = Var(T, within=NonNegativeReals, bounds=(0, E_max))  # Battery energy level (SoC)
+model.E = Var(T, within=NonNegativeReals, bounds=(0, E_max))  # Battery energy level
 model.P_grid = Var(T, within=NonNegativeReals)  # Grid import power
 
-# Set initial battery state of charge
-model.E[0].fix(150)  # Starting SoC (kWh)
+model.E[0].fix(150)
 
 #%% Constraints
 
-# Energy balance constraint (battery charging/discharging dynamics)
+# Battery energy balance over time
 def energy_balance_rule(model, t):
     if t == 0:
-        return Constraint.Skip  # Skip first step (initial state is fixed)
+        return Constraint.Skip 
     return model.E[t] == model.E[t-1] + eta_c * model.P_c[t] - model.P_d[t] / eta_d
 
 model.energy_balance = Constraint(T, rule=energy_balance_rule)
 
-# Battery charging only allowed from production (not from grid)
+# Battery charging does not exceed available power production
 def battery_charging_production_limit_rule(model, t):
     return model.P_c[t] <= P_production[t]
 
 model.battery_charging_production_limit = Constraint(T, rule=battery_charging_production_limit_rule)
 
-# Grid sufficiency constraint: battery should be used before the grid
+# Grid and battery together provide enough power to meet demand
 def grid_sufficiency_rule(model, t):
     return model.P_d[t] + model.P_grid[t] >= P_load[t] - P_production[t]
 
 model.grid_sufficiency = Constraint(T, rule=grid_sufficiency_rule)
 
-# Power balance constraint: ensure demand is met
+# Total power supply (grid, battery, production) meets or exceeds demand
 def power_balance_rule(model, t):
     return model.P_grid[t] + model.P_d[t] + P_production[t] >= P_load[t]
 
 model.power_balance = Constraint(T, rule=power_balance_rule)
 
-# Ensure battery discharge is within stored energy capacity
+# Battery cannot discharge more energy than it stored in the previous time step
 def battery_energy_limit_rule(model, t):
     if t == 0:
-        return Constraint.Skip  # Skip first step (initial state is fixed)
+        return Constraint.Skip
     return model.P_d[t] <= model.E[t-1]
 
 model.battery_energy_limit = Constraint(T, rule=battery_energy_limit_rule)
 
-# Prevent over-discharge of the battery
+# Battery does not discharge more energy than it currently holds
 def battery_discharge_requirement_rule(model, t):
     return model.P_d[t] <= model.E[t]
 
 model.battery_discharge_requirement = Constraint(T, rule=battery_discharge_requirement_rule)
 
+
 #%% Objective Function
 
-# Minimize total grid import cost
 model.obj = Objective(expr=sum(C[t] * model.P_grid[t] for t in T), sense=minimize)
 
 #%% Solving
@@ -92,7 +90,6 @@ model.obj = Objective(expr=sum(C[t] * model.P_grid[t] for t in T), sense=minimiz
 solver = SolverFactory('glpk')
 results = solver.solve(model, tee=True)
 
-# Check solver results
 if results.solver.termination_condition != TerminationCondition.optimal:
     print("Solver did not find an optimal solution!")
 else:
@@ -100,7 +97,6 @@ else:
 
 #%% Results
 
-# Extract optimization results
 results_df = pd.DataFrame({
     "Time": list(T),
     "P_grid": [model.P_grid[t].value if model.P_grid[t].value is not None else 0 for t in T],
@@ -112,7 +108,6 @@ results_df = pd.DataFrame({
 
 results_df["Cost"] = results_df["P_grid"] * 0.1  
 
-# Save results to CSV
 results_df.to_csv("optimization_results.csv", index=False)
 
 plt.figure(figsize=(14, 6))
@@ -158,5 +153,3 @@ plt.grid()
 plt.savefig(os.path.join(output_folder, "Charging_Discharging_Patterns.png"))
 plt.show()
 plt.close()
-
-print("Optimization complete.")
