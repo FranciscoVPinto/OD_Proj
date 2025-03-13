@@ -109,8 +109,12 @@ results_df = pd.DataFrame({
     "Battery_SoC": [model.E[t].value if model.E[t].value is not None else 0 for t in T]
 })
 
+# Add the missing "Cost" column (assuming cost per unit is 0.1)
+results_df["Cost"] = results_df["P_grid"] * 0.1  # Grid import cost calculation
+
 # Save results to CSV
 results_df.to_csv("optimization_results.csv", index=False)
+
 
 # Save and display plots
 plt.figure(figsize=(14, 6))
