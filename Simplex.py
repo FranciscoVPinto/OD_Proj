@@ -9,12 +9,12 @@ output_folder = "simplex_plots"
 os.makedirs(output_folder, exist_ok=True)
 
 # Set aggregation interval to 480 minutes (8 hours)
-AGGREGATION_INTERVAL = 480  # in minutes
+AGGREGATION_INTERVAL = 240  # in minutes
 TIME_STEP_RATIO = AGGREGATION_INTERVAL // 15  # Since original data is in 15 min intervals
 
 # Load data
-consumers_file = "Dataset_Consumers.xlsx"
-producers_file = "Dataset_Producers.xlsx"
+consumers_file = "Dataset_Consumers_2.xlsx"
+producers_file = "Dataset_Producers_2.xlsx"
 
 consumers_data = pd.read_excel(consumers_file, header=0)
 producers_data = pd.read_excel(producers_file, header=0)
@@ -126,9 +126,9 @@ results_df = pd.DataFrame({
 results_df["Cost"] = results_df["P_grid"] * 0.1  
 
 Total_Cost = results_df["Cost"].sum()
-print(f"Total Cost: ${Total_Cost:.2f}")
+print(f"Total Cost (Simplex): ${Total_Cost:.2f}")
 
-results_df.to_csv(os.path.join(output_folder, "meta_results.csv"), index=False)
+results_df.to_csv(os.path.join(output_folder, "simplex_results.csv"), index=False)
 
 plt.figure(figsize=(14, 6))
 plt.plot(results_df["Time"], results_df["Cost"], label="Cost Over Time ($)", linewidth=2, color='r')
