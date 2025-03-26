@@ -5,14 +5,31 @@ from pyomo.environ import *
 
 #%%
 
-output_folder = "plots"
+output_folder = "simplex_plots"
 os.makedirs(output_folder, exist_ok=True)
 
+# Set aggregation interval to 480 minutes (8 hours)
+AGGREGATION_INTERVAL = 480  # in minutes
+TIME_STEP_RATIO = AGGREGATION_INTERVAL // 15  # Since original data is in 15 min intervals
+
+# Load data
 consumers_file = "Dataset_Consumers.xlsx"
 producers_file = "Dataset_Producers.xlsx"
 
 consumers_data = pd.read_excel(consumers_file, header=0)
 producers_data = pd.read_excel(producers_file, header=0)
+
+# Ensure dataset length is a multiple of TIME_STEP_RATIO
+num_rows = (len(consumers_data) // TIME_STEP_RATIO) * TIME_STEP_RATIO
+consumers_data = consumers_data.iloc[:num_rows]
+producers_data = producers_data.iloc[:num_rows]
+
+# Aggregate data to the selected interval
+consumers_data = consumers_data.groupby(consumers_data.index // TIME_STEP_RATIO).sum()
+producers_data = producers_data.groupby(producers_data.index // TIME_STEP_RATIO).sum()
+
+T = range(len(consumers_data))
+
 
 T = range(len(consumers_data))
 
@@ -36,7 +53,7 @@ model.P_d = Var(T, within=NonNegativeReals)  # Battery discharging power
 model.E = Var(T, within=NonNegativeReals, bounds=(0, E_max))  # Battery energy level
 model.P_grid = Var(T, within=NonNegativeReals)  # Grid import power
 
-model.E[0].fix(150)
+model.E[0].fix(450)
 
 #%% Constraints
 
@@ -108,7 +125,10 @@ results_df = pd.DataFrame({
 
 results_df["Cost"] = results_df["P_grid"] * 0.1  
 
-results_df.to_csv("optimization_results.csv", index=False)
+Total_Cost = results_df["Cost"].sum()
+print(f"Total Cost: ${Total_Cost:.2f}")
+
+results_df.to_csv(os.path.join(output_folder, "meta_results.csv"), index=False)
 
 plt.figure(figsize=(14, 6))
 plt.plot(results_df["Time"], results_df["Cost"], label="Cost Over Time ($)", linewidth=2, color='r')
