@@ -46,6 +46,8 @@ model.SoC = Var(model.B, model.T, within=NonNegativeReals, bounds=(0, E_max[0]))
 model.P_grid = Var(model.T, within=NonNegativeReals)
 
 model.SoC[0, 0].fix(initial_SoC[0])
+final_t = list(model.T)[-1]
+model.final_soc = Constraint(expr=model.SoC[0, final_t] == initial_SoC[0])
 
 #%% Restrições
 def soc_balance_rule(model, i, t):
@@ -59,7 +61,7 @@ def charging_limit_rule(model, i, t):
 model.charging_limit = Constraint(model.B, model.T, rule=charging_limit_rule)
 
 def supply_rule(model, t):
-    return sum(model.P_d[i, t] for i in model.B) + model.P_grid[t] >= P_load[t] - P_production[t]
+    return sum(model.P_d[i, t] for i in model.B) + model.P_grid[t] >= P_load[t]
 model.supply_rule = Constraint(model.T, rule=supply_rule)
 
 def discharge_limit_rule(model, i, t):
@@ -85,7 +87,6 @@ results_df["Cost"] = results_df["P_grid"] * C_grid
 results_df.to_csv(os.path.join(output_folder, "simplex_results.csv"), index=False)
 
 #%% Gráficos
-
 plt.figure(figsize=(14, 6))
 plt.plot(results_df["Time"], results_df["Battery_SoC"], label="Battery State of Charge (SoC) (kWh)", linestyle='dashed', linewidth=2)
 plt.xlabel("Time Step (8H intervals)")
@@ -109,7 +110,7 @@ plt.show()
 
 print(f"Custo Total (SIMPLEX): {results_df['Cost'].sum():.2f} €")
 
-#%% Gráfico: Consumo, Descarga da Bateria, Importação da Rede e Produção
+#%% Gráfico: Consumo, Descarga da Bateria e Rede
 total_consumo = list(P_load.values())
 total_producao = list(P_production.values())
 
@@ -127,4 +128,24 @@ plt.grid()
 plt.savefig(os.path.join(output_folder, "Energy_Flows_Over_Time.png"))
 plt.show()
 
+#%% Análise teórica do custo mínimo (sem bateria, só produção + rede)
+print("\n===== ANÁLISE TEÓRICA DE CUSTO MÍNIMO =====")
 
+# Carregar os dados novamente (não agregados)
+consumers_data_raw = pd.read_excel(consumers_file, skiprows=1)
+producers_data_raw = pd.read_excel(producers_file, skiprows=1)
+
+# Garantir mesmo nº de linhas (múltiplo de TIME_STEP_RATIO)
+num_rows = (len(consumers_data_raw) // TIME_STEP_RATIO) * TIME_STEP_RATIO
+consumers_data_raw = consumers_data_raw.iloc[:num_rows]
+producers_data_raw = producers_data_raw.iloc[:num_rows]
+
+# Agregar dados (como no modelo)
+consumers_agg = consumers_data_raw.groupby(consumers_data_raw.index // TIME_STEP_RATIO).sum()
+producers_agg = producers_data_raw.groupby(producers_data_raw.index // TIME_STEP_RATIO).sum()
+
+# Calcular totais
+total_consumo = consumers_agg.sum().sum()
+total_producao = producers_agg.sum().sum()
+total_defice = max(0, total_consumo - total_producao)
+custo_minimo = total_defice * C_grid

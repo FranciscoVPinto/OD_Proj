@@ -3,11 +3,13 @@ import matplotlib.pyplot as plt
 import os
 
 # Carregar resultados
-simplex = pd.read_csv("simplex_1p1c_plots/simplex_results.csv")
-de = pd.read_csv("de_1p1c_plots/Simplified_DE_results.csv")
-pso_1p1c = pd.read_csv("pso_1p1c_plots/pso_results.csv")
-pso_14p51c = pd.read_csv("pso_14p51c_plots/pso_results_final_sem_violacoes.csv")
+simplex = pd.read_csv("META/simplex_1p1c_plots/simplex_results.csv")
+de = pd.read_csv("META/de_1p1c_plots/Simplified_DE_results.csv")
+pso_1p1c = pd.read_csv("META/pso_1p1c_plots/pso_results.csv")
+pso_14p51c = pd.read_csv("META/pso_multiagent_plots/PSO_MultiAgent_Results.csv")
+rl = pd.read_csv("RL/results/rl_results.csv")
 
+# Criar pasta de saída
 output_folder = "Final_Results"
 os.makedirs(output_folder, exist_ok=True)
 
@@ -16,7 +18,15 @@ plt.figure(figsize=(14, 5))
 plt.plot(simplex["Time"], simplex["Cost"].cumsum(), label="Simplex", linewidth=2)
 plt.plot(de["Time"], de["Cost_grid"].cumsum(), label="DE", linewidth=2)
 plt.plot(pso_1p1c["Time"], pso_1p1c["Cost"].cumsum(), label="PSO 1p1c", linewidth=2)
-plt.plot(pso_14p51c["Time"], pso_14p51c["Cost"].cumsum(), label="PSO 14p51c", linewidth=2)
+plt.plot(pso_14p51c["Time"], pso_14p51c["Cost_grid"].cumsum(), label="PSO 14p51c", linewidth=2)
+plt.plot(rl["Time"], rl["Total_cost"].cumsum(), label="RL Agent", linewidth=2)
+
+# Anotações de custo total no final de cada linha
+def annotate_final_cost(df, column, label):
+    final_time = df["Time"].iloc[-1]
+    final_cost = df[column].cumsum().iloc[-1]
+    plt.text(final_time + 1, final_cost, f"{label}: {final_cost:.2f} €", fontsize=9)
+
 plt.xlabel("Time Step (8H intervals)")
 plt.ylabel("Cumulative Cost (€)")
 plt.title("Custo acumulado ao longo do tempo")
@@ -26,12 +36,14 @@ plt.tight_layout()
 plt.savefig(os.path.join(output_folder, "comparative_costs.png"))
 plt.show()
 
+
 # Gráfico 2: Energia importada da rede
 plt.figure(figsize=(14, 5))
 plt.plot(simplex["Time"], simplex["P_grid"], label="Simplex", linewidth=2)
 plt.plot(de["Time"], de["P_grid"], label="DE", linewidth=2)
 plt.plot(pso_1p1c["Time"], pso_1p1c["P_grid"], label="PSO 1p1c", linewidth=2)
 plt.plot(pso_14p51c["Time"], pso_14p51c["P_grid"], label="PSO 14p51c", linewidth=2)
+plt.plot(rl["Time"], rl["P_grid"], label="RL Agent", linewidth=2)
 plt.xlabel("Time Step (8H intervals)")
 plt.ylabel("Grid Import (kW)")
 plt.title("Energia Importada da Rede")
@@ -47,6 +59,7 @@ plt.plot(simplex["Time"], simplex["Battery_SoC"], label="Simplex", linestyle='--
 plt.plot(de["Time"], de["Battery_SoC"], label="DE", linestyle='-')
 plt.plot(pso_1p1c["Time"], pso_1p1c["Battery_SoC"], label="PSO 1p1c", linestyle='-.')
 plt.plot(pso_14p51c["Time"], pso_14p51c["Battery_SoC"], label="PSO 14p51c", linestyle=':')
+plt.plot(rl["Time"], rl["Battery_SoC"], label="RL Agent", linestyle='dashdot')
 plt.xlabel("Time Step (8H intervals)")
 plt.ylabel("Total Battery SoC (kWh)")
 plt.title("Estado de Carga das Baterias")
