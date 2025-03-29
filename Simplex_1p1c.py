@@ -14,7 +14,7 @@ C_grid = 0.1
 AGGREGATION_INTERVAL = 480
 TIME_STEP_RATIO = AGGREGATION_INTERVAL // 15
 
-output_folder = "simplex_plots"
+output_folder = "simplex_1p1c_plots"
 os.makedirs(output_folder, exist_ok=True)
 
 #%% Carregar dados
