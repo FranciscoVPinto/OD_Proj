@@ -1,11 +1,10 @@
-# %% Differential Evolution Optimization with Consistency and Waste Minimization
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from scipy.optimize import differential_evolution
 
-# Parameters
+#%% Parâmetros fixos
 E_max = 2500
 eta_c = 0.95
 eta_d = 0.95
@@ -19,7 +18,7 @@ TIME_STEP_RATIO = AGGREGATION_INTERVAL // 15
 output_folder = "de_1p1c_plots"
 os.makedirs(output_folder, exist_ok=True)
 
-# Load and aggregate data
+#%% Carregar dados
 consumers_data = pd.read_excel("Top_2_Months_Consumers.xlsx", skiprows=1)
 producers_data = pd.read_excel("Top_2_Months_Production.xlsx", skiprows=1)
 
@@ -34,10 +33,10 @@ T = len(consumers_data)
 P_load = consumers_data.sum(axis=1).values
 P_prod = producers_data.sum(axis=1).values
 
-# Bounds
+#%% Bounds
 bounds = [(0.0, prod) for prod in P_prod] + [(0.0, E_max) for _ in range(T)]
 
-# Objective Function
+# %% Função Objetivo
 def objective(x):
     P_charge = x[:T]
     P_discharge = x[T:]
@@ -71,7 +70,7 @@ def objective(x):
 
     return grid_cost + waste_cost + penalty
 
-# Generate valid initial population
+# %% Gerar população inicial válida
 popsize = 15
 init_population = []
 while len(init_population) < popsize:
@@ -92,7 +91,7 @@ while len(init_population) < popsize:
         init_population.append(np.concatenate([P_c, P_d]))
 init_population = np.array(init_population)
 
-# Run DE
+# %% Executar o algoritmo DE
 result = differential_evolution(
     objective,
     bounds=bounds,
@@ -106,7 +105,7 @@ result = differential_evolution(
     disp=True
 )
 
-# Extract results
+# %% Extrair resultados
 x_opt = result.x
 P_charge_opt = x_opt[:T]
 P_discharge_opt = x_opt[T:]
@@ -121,6 +120,7 @@ for t in range(T):
     P_grid[t] = max(0.0, P_load[t] - eta_d * P_discharge_opt[t])
     P_waste[t] = max(0.0, P_prod[t] - P_charge_opt[t])
 
+# %% Guardar resultados
 results_df = pd.DataFrame({
     "Time": np.arange(T),
     "P_charge": P_charge_opt,
@@ -133,7 +133,7 @@ results_df = pd.DataFrame({
 })
 results_df.to_csv(os.path.join(output_folder, "Simplified_DE_results.csv"), index=False)
 
-# Plots
+# %% Gerar gráficos
 plt.figure(figsize=(14,6))
 plt.plot(results_df["Time"], results_df["Battery_SoC"], label="SoC (kWh)")
 plt.title("Battery State of Charge Over Time")
@@ -165,6 +165,4 @@ plt.legend()
 plt.savefig(os.path.join(output_folder, "Flows_Simplified.png"))
 plt.show()
 
-# Summary
-print(f"\n💡 Grid cost: {results_df['Cost_grid'].sum():.2f} €")
-print(f"🗑️ Total energy wasted: {results_df['Energy_waste'].sum():.2f} kWh")
+print(f"\n Total grid cost: {results_df['Cost_grid'].sum():.2f} €")

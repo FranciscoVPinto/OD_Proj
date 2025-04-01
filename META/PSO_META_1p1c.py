@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Mar 29 14:48:58 2025
-
-@author: pinto
-"""
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -12,15 +5,15 @@ from pyswarm import pso
 import os
 
 #%% Parâmetros fixos
-E_max = 2500  # Capacidade máxima da bateria (kWh)
-eta_c = 0.95  # Eficiência de carregamento
-eta_d = 0.95  # Eficiência de descarga
+E_max = 2500  
+eta_c = 0.95  
+eta_d = 0.95  
 initial_SoC = E_max * 0.5
-C_grid = 0.1  # €/kWh
-PENALIZE_GRID = 2e3  # Penalização adicional por uso da rede
-WASTED_SOLAR_PENALTY = 5  # Penalização por energia solar desperdiçada
+C_grid = 0.1  
+PENALIZE_GRID = 2e3  
+WASTED_SOLAR_PENALTY = 5 
 
-AGGREGATION_INTERVAL = 480  # 4h
+AGGREGATION_INTERVAL = 480  
 TIME_STEP_RATIO = AGGREGATION_INTERVAL // 15
 output_folder = "pso_1p1c_plots"
 os.makedirs(output_folder, exist_ok=True)
@@ -30,14 +23,12 @@ consumers = pd.read_excel("Top_2_Months_Consumers.xlsx", skiprows=1)
 producers = pd.read_excel("Top_2_Months_Production.xlsx", skiprows=1)
 
 nrows = (len(consumers) // TIME_STEP_RATIO) * TIME_STEP_RATIO
-if nrows == 0:
-    raise ValueError("Os dados não são suficientes para agregacão. Verifica os ficheiros e TIME_STEP_RATIO.")
-
 consumers = consumers.iloc[:nrows]
 producers = producers.iloc[:nrows]
 
 consumers = consumers.groupby(consumers.index // TIME_STEP_RATIO).sum()
 producers = producers.groupby(producers.index // TIME_STEP_RATIO).sum()
+
 
 P_load = consumers.sum(axis=1).values
 P_production = producers.sum(axis=1).values
@@ -77,7 +68,7 @@ def objective(x):
 
     return total_cost
 
-#%% Executar PSO
+#%% PSO
 x_opt, fopt = pso(
     objective,
     lb,
@@ -88,7 +79,7 @@ x_opt, fopt = pso(
     debug=True
 )
 
-#%% Extrair resultados
+#%% Resultados
 x_c = x_opt[:T]
 x_d = x_opt[T:]
 P_c = np.array([denormalize_vector(x_c[t], 0, P_production[t]) for t in range(T)])

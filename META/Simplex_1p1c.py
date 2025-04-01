@@ -31,11 +31,11 @@ producers_data = producers_data.iloc[:num_rows]
 consumers_data = consumers_data.groupby(consumers_data.index // TIME_STEP_RATIO).sum()
 producers_data = producers_data.groupby(producers_data.index // TIME_STEP_RATIO).sum()
 
-T = range(len(consumers_data))
 P_load = consumers_data.sum(axis=1).to_dict()
 P_production = producers_data.sum(axis=1).to_dict()
+T = len(P_load)
 
-#%% Modelo Pyomo
+#%% Modelo
 model = ConcreteModel()
 model.T = Set(initialize=T)
 model.B = Set(initialize=range(N_batteries))

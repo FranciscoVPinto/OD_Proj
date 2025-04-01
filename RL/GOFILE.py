@@ -6,23 +6,19 @@ from battery_env import BatteryEnv
 from stable_baselines3 import DDPG
 from stable_baselines3.common.env_util import make_vec_env
 
-# === CONFIGURAÇÕES ===
 consumers_file = "Top_2_Months_Consumers.xlsx"
 producers_file = "Top_2_Months_Production.xlsx"
-output_folder = "results"
 
+output_folder = "results"
 os.makedirs(output_folder, exist_ok=True)
 
-# === AMBIENTE RL ===
 env = BatteryEnv(consumers_file=consumers_file, producers_file=producers_file)
 vec_env = make_vec_env(lambda: env, n_envs=1)
 
-# === TREINO (SEM TENSORBOARD LOGGING) ===
 model = DDPG("MlpPolicy", vec_env, verbose=1)
 model.learn(total_timesteps=10_000)
 model.save("ddpg_battery_agent")
 
-# === TESTE ===
 test_env = BatteryEnv(consumers_file, producers_file)
 obs, _ = test_env.reset()
 done = False
@@ -63,7 +59,6 @@ while not done:
     P_discharge_list.append(P_d_real)
     Reward_list.append(reward)
 
-# === DATAFRAME ===
 T = len(SoC_list)
 df = pd.DataFrame({
     "Time": np.arange(T),
@@ -82,7 +77,6 @@ df["Total_cost"] = df["Cost_grid"] + df["Cost_waste"]
 
 df.to_csv(os.path.join(output_folder, "rl_results.csv"), index=False)
 
-# === GRÁFICOS ===
 plt.figure(figsize=(14, 6))
 plt.plot(df["Time"], df["Battery_SoC"], label="Battery SoC (kWh)")
 plt.title("Battery State of Charge")
@@ -114,7 +108,5 @@ plt.legend()
 plt.savefig(os.path.join(output_folder, "Energy_Flows.png"))
 plt.show()
 
-# === SUMÁRIO ===
-print(f"\n✅ Total Grid Cost: {df['Cost_grid'].sum():.2f} €")
-print(f"🗑️  Total Waste Cost: {df['Cost_waste'].sum():.2f} €")
-print(f"💰 Total Cost (RL) : {df['Total_cost'].sum():.2f} €")
+print(f"\n Total Grid Cost: {df['Cost_grid'].sum():.2f} €")
+
