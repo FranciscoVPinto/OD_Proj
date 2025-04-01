@@ -131,7 +131,7 @@ results_df = pd.DataFrame({
     "Cost_grid": P_grid * C_grid,
     "Energy_waste": P_waste,
 })
-results_df.to_csv(os.path.join(output_folder, "Simplified_DE_results.csv"), index=False)
+results_df.to_csv(os.path.join(output_folder, "DE_results.csv"), index=False)
 
 # %% Gerar gráficos
 plt.figure(figsize=(14,6))
@@ -140,7 +140,7 @@ plt.title("Battery State of Charge Over Time")
 plt.xlabel("8h Time Blocks")
 plt.grid()
 plt.legend()
-plt.savefig(os.path.join(output_folder, "SoC_Simplified.png"))
+plt.savefig(os.path.join(output_folder, "SoC.png"))
 plt.show()
 
 plt.figure(figsize=(14,6))
@@ -150,7 +150,7 @@ plt.title("Charging / Discharging")
 plt.xlabel("8h Time Blocks")
 plt.grid()
 plt.legend()
-plt.savefig(os.path.join(output_folder, "Charge_Discharge_Simplified.png"))
+plt.savefig(os.path.join(output_folder, "Charge_Discharge.png"))
 plt.show()
 
 plt.figure(figsize=(14,6))
@@ -162,7 +162,7 @@ plt.title("Energy Flow Over Time")
 plt.xlabel("8h Time Blocks")
 plt.grid()
 plt.legend()
-plt.savefig(os.path.join(output_folder, "Flows_Simplified.png"))
+plt.savefig(os.path.join(output_folder, "Flows.png"))
 plt.show()
 
 print(f"\n Total grid cost: {results_df['Cost_grid'].sum():.2f} €")

@@ -7,8 +7,7 @@ class BatteryEnv(gym.Env):
     def __init__(self, consumers_file, producers_file, agg_interval=480, eta_c=0.95, eta_d=0.95,
                  E_max=2500, C_grid=0.1, penalty_grid=2.0, penalty_waste=0.2):
         super(BatteryEnv, self).__init__()
-
-        # Parâmetros
+       
         self.eta_c = eta_c
         self.eta_d = eta_d
         self.E_max = E_max
@@ -18,8 +17,7 @@ class BatteryEnv(gym.Env):
         self.penalty_waste = penalty_waste
         self.agg_interval = agg_interval
         self.timestep_ratio = agg_interval // 15
-
-        # Dados
+      
         consumers = pd.read_excel(consumers_file, skiprows=1)
         producers = pd.read_excel(producers_file, skiprows=1)
 
@@ -27,13 +25,11 @@ class BatteryEnv(gym.Env):
         self.P_load = consumers.iloc[:nrows].groupby(consumers.index[:nrows] // self.timestep_ratio).sum().sum(axis=1).values
         self.P_prod = producers.iloc[:nrows].groupby(producers.index[:nrows] // self.timestep_ratio).sum().sum(axis=1).values
         self.T = len(self.P_load)
-
-        # Espaço de observação
+        
         self.observation_space = spaces.Box(low=np.array([0, 0, 0]),
                                             high=np.array([E_max, np.inf, np.inf]),
                                             dtype=np.float32)
-
-        # Espaço de ação
+        
         self.action_space = spaces.Box(low=0.0, high=1.0, shape=(2,), dtype=np.float32)
 
         self.reset()

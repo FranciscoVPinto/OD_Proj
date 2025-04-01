@@ -147,7 +147,7 @@ plt.ylabel("Power (kW)")
 plt.title("Energy Flows Over Time")
 plt.legend()
 plt.grid()
-plt.savefig(os.path.join(output_folder, "Energy_Flows.png"))
+plt.savefig(os.path.join(output_folder, "Flows.png"))
 plt.show()
 
 print(f"Total Grid Cost (PSO): {df['Cost'].sum():.2f} €")

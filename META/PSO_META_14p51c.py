@@ -123,7 +123,7 @@ results_df = pd.DataFrame({
     "Cost_grid": P_grid * C_grid
 })
 
-results_df.to_csv(os.path.join(output_folder, "PSO_MultiAgent_PerConsumer_Discharge.csv"), index=False)
+results_df.to_csv(os.path.join(output_folder, "PSO_MultiAgent_Results.csv"), index=False)
 
 #%% Gráficos
 plt.figure(figsize=(14,6))
@@ -132,7 +132,7 @@ plt.title("Estado de Carga da Bateria - Média por Consumidor")
 plt.xlabel("Blocos de tempo de 8h")
 plt.grid()
 plt.legend()
-plt.savefig(os.path.join(output_folder, "Battery_SoC.png"))
+plt.savefig(os.path.join(output_folder, "SoC.png"))
 plt.show()
 
 plt.figure(figsize=(14,6))
@@ -154,7 +154,7 @@ plt.title("Fluxo de Energia ao Longo do Tempo")
 plt.xlabel("Blocos de tempo de 8h")
 plt.grid()
 plt.legend()
-plt.savefig(os.path.join(output_folder, "Energy_Flow.png"))
+plt.savefig(os.path.join(output_folder, "Flows.png"))
 plt.show()
 
 print(f"\nCusto total com a rede: {results_df['Cost_grid'].sum():.2f} €")

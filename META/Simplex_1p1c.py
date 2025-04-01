@@ -94,7 +94,7 @@ plt.ylabel("Battery Energy (kWh)")
 plt.title("Battery SoC Over Time")
 plt.legend()
 plt.grid()
-plt.savefig(os.path.join(output_folder, "Battery_SoC_Over_Time.png"))
+plt.savefig(os.path.join(output_folder, "Battery_SoC.png"))
 plt.show()
 
 plt.figure(figsize=(14, 6))
@@ -105,12 +105,11 @@ plt.ylabel("Power (kW)")
 plt.title("Charging and Discharging Patterns")
 plt.legend()
 plt.grid()
-plt.savefig(os.path.join(output_folder, "Charging_Discharging_Patterns.png"))
+plt.savefig(os.path.join(output_folder, "Charge_Discharge.png"))
 plt.show()
 
 print(f"Custo Total (SIMPLEX): {results_df['Cost'].sum():.2f} €")
 
-#%% Gráfico: Consumo, Descarga da Bateria e Rede
 total_consumo = list(P_load.values())
 total_producao = list(P_production.values())
 
@@ -119,33 +118,10 @@ plt.plot(results_df["Time"], total_consumo, label="Total Consumption (kW)", line
 plt.plot(results_df["Time"], results_df["P_discharge"], label="Battery Discharge (kW)", linestyle='dashed', linewidth=2)
 plt.plot(results_df["Time"], results_df["P_grid"], label="Grid Import (kW)", linestyle='dashdot', linewidth=2)
 plt.plot(results_df["Time"], total_producao, label="Total Production (kW)", linestyle='dotted', linewidth=2)
-
 plt.xlabel("Time Step (8H intervals)")
 plt.ylabel("Power (kW)")
 plt.title("Energy Flows Over Time")
 plt.legend()
 plt.grid()
-plt.savefig(os.path.join(output_folder, "Energy_Flows_Over_Time.png"))
+plt.savefig(os.path.join(output_folder, "Energy_Flows.png"))
 plt.show()
-
-#%% Análise teórica do custo mínimo (sem bateria, só produção + rede)
-print("\n===== ANÁLISE TEÓRICA DE CUSTO MÍNIMO =====")
-
-# Carregar os dados novamente (não agregados)
-consumers_data_raw = pd.read_excel(consumers_file, skiprows=1)
-producers_data_raw = pd.read_excel(producers_file, skiprows=1)
-
-# Garantir mesmo nº de linhas (múltiplo de TIME_STEP_RATIO)
-num_rows = (len(consumers_data_raw) // TIME_STEP_RATIO) * TIME_STEP_RATIO
-consumers_data_raw = consumers_data_raw.iloc[:num_rows]
-producers_data_raw = producers_data_raw.iloc[:num_rows]
-
-# Agregar dados (como no modelo)
-consumers_agg = consumers_data_raw.groupby(consumers_data_raw.index // TIME_STEP_RATIO).sum()
-producers_agg = producers_data_raw.groupby(producers_data_raw.index // TIME_STEP_RATIO).sum()
-
-# Calcular totais
-total_consumo = consumers_agg.sum().sum()
-total_producao = producers_agg.sum().sum()
-total_defice = max(0, total_consumo - total_producao)
-custo_minimo = total_defice * C_grid

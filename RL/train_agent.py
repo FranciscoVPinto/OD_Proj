@@ -7,9 +7,6 @@ producers_file = "Top_2_Months_Production.xlsx"
 
 env = BatteryEnv(consumers_file=consumers_file, producers_file=producers_file)
 
-# Envolver para paralelismo (opcional)
-env = make_vec_env(lambda: env, n_envs=1)
-
 model = DDPG("MlpPolicy", env, verbose=1, tensorboard_log="./tb_logs/")
 model.learn(total_timesteps=100_000)
 
